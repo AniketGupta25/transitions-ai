@@ -1,0 +1,31 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 44.87111111111111,
+      "duration": 44.87111111111111,
+      "type": "intro",
+      "source": "fallback",
+      "avg_energy": 0.42474275033191344,
+      "bpm": 107.666015625,
+      "key": "C# major",
+      "spectral_contrast": [
+        17.242520497078694,
+        10.808899621610065,
+        15.77998879894281,
+        16.698122901605583,
+        16.782625185520576,
+        18.031781759247245,
+        62.20778923451968
+      ],
+      "chroma_variance": 0.08660897092501524,
+      "is_first": true,
+      "is_last": false,
+      "rel_position": 0.0,
+      "id": "Future, Metro Boomin - Like That (Official Audio)_1",
+      "track": "Future, Metro Boomin - Like That (Official Audio)"
+    }
+  ],
+  "transitions": [],
+  "total_duration": 44.87111111111111
+}
