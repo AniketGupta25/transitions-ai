@@ -5,9 +5,11 @@ Transitions AI is a Python project that automatically generates high-quality DJ 
 
 ### IMMEDIATE RUN INSTRUCTIONS
 
-```cd frontend
+```
+cd frontend
 npm install
-npm rn dev```
+npm rn dev
+```
 
 Backend lib is /transitions-ai. Frontend code held in /frontend.
 The main.py is entrypoint for the backend. Currently run locally.
