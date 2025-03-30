@@ -117,10 +117,41 @@ class AudioProcessor:
 
     def calculate_transition_scores(
         self, segments: List[Dict]
-    ) -> Dict[str, List[Tuple[str, float]]]:
-        """Calculate transition compatibility scores between segments."""
-        transition_scores = {}
+    ) -> Tuple[Dict[str, List[Tuple[str, float]]], Dict[str, List[Tuple[str, float]]]]:
+        """Calculate transition compatibility scores between segments.
 
+        Returns:
+            Tuple containing:
+            - transition_scores: Dict mapping segment_id to list of (target_id, score) tuples
+            - similarity_scores: Dict mapping segment_id to list of (similar_id, similarity) tuples
+        """
+        transition_scores = {}
+        similarity_scores = {}
+
+        # First calculate similarity scores between segments of the same track
+        for source in segments:
+            similarity_scores[source["segment_id"]] = []
+            source_features = source["features"]
+
+            # Compare with other segments from same track
+            for target in segments:
+                target_features = target["features"]
+                if (
+                    source["original_track"] == target["original_track"]
+                    and source["segment_id"] != target["segment_id"]
+                ):
+                    try:
+                        similarity = self._calculate_similarity_score(
+                            source_features, target_features
+                        )
+                        similarity_scores[source["segment_id"]].append(
+                            (target["segment_id"], similarity)
+                        )
+                    except Exception as e:
+                        print(f"⚠️ Error calculating similarity: {str(e)}")
+                        continue
+
+        # Calculate transition scores
         for source in segments:
             transition_scores[source["segment_id"]] = []
             source_features = source["features"]
@@ -130,14 +161,18 @@ class AudioProcessor:
                     continue
 
                 target_features = target["features"]
-                score = self._calculate_compatibility_score(
-                    source_features, target_features
-                )
-
-                if score > 50:  # Only keep good transitions
-                    transition_scores[source["segment_id"]].append(
-                        (target["segment_id"], score)
+                try:
+                    score = self._calculate_compatibility_score(
+                        source_features, target_features
                     )
+
+                    if score > 50:  # Only keep good transitions
+                        transition_scores[source["segment_id"]].append(
+                            (target["segment_id"], score)
+                        )
+                except Exception as e:
+                    print(f"⚠️ Error calculating transition score: {str(e)}")
+                    continue
 
             # Sort by score and keep top 5
             transition_scores[source["segment_id"]].sort(
@@ -147,7 +182,7 @@ class AudioProcessor:
                 source["segment_id"]
             ][:5]
 
-        return transition_scores
+        return transition_scores, similarity_scores
 
     def create_transition(
         self,
@@ -227,3 +262,53 @@ class AudioProcessor:
         )
 
         return final_score
+
+    def _calculate_similarity_score(
+        self, source_features: Dict, target_features: Dict
+    ) -> float:
+        """Calculate similarity score between two segments (0-100)."""
+        # 1. Compare multiple features with different weights
+        feature_similarities = {
+            # Timbre comparison (MFCCs)
+            "mfcc": np.dot(source_features["mfcc"], target_features["mfcc"])
+            / (
+                np.linalg.norm(source_features["mfcc"])
+                * np.linalg.norm(target_features["mfcc"])
+            ),
+            # Harmonic content (Chroma)
+            "chroma": np.dot(source_features["chroma"], target_features["chroma"])
+            / (
+                np.linalg.norm(source_features["chroma"])
+                * np.linalg.norm(target_features["chroma"])
+            ),
+            # Energy difference
+            "energy": 1
+            - abs(source_features["rms"] - target_features["rms"])
+            / max(source_features["rms"], target_features["rms"]),
+            # Tempo similarity
+            "tempo": 1
+            - abs(source_features["tempo"] - target_features["tempo"])
+            / max(source_features["tempo"], 1),
+        }
+
+        # 2. Apply stricter weights that require multiple features to be similar
+        weights = {
+            "mfcc": 0.4,  # Timbre similarity
+            "chroma": 0.3,  # Harmonic similarity
+            "energy": 0.2,  # Energy level similarity
+            "tempo": 0.1,  # Tempo similarity
+        }
+
+        # 3. Apply non-linear scaling to make the similarity score more discriminative
+        similarity = sum(
+            weights[feature]
+            * (score**2)  # Square the scores to make them more selective
+            for feature, score in feature_similarities.items()
+        )
+
+        # 4. Apply exponential scaling to make high similarities harder to achieve
+        final_score = (
+            similarity**1.5
+        ) * 100  # Exponential scaling makes it harder to get very high scores
+
+        return float(final_score)
