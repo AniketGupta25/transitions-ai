@@ -2,6 +2,11 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import dynamic from "next/dynamic"
+
+const WaveformPlayer = dynamic(() => import('../components/WaveformPlayer'), { ssr: false });
+
+
 
 type Song = {
   id: number
@@ -43,6 +48,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex bg-black text-white font-sans">
+
+
       {/* Sidebar */}
       <motion.aside 
         initial={{ x: -20, opacity: 0 }}
@@ -118,6 +125,8 @@ export default function Home() {
           )}
         </AnimatePresence>
       </motion.aside>
+
+      
 
       {/* Main */}
       <div className="flex-1 bg-gradient-to-b from-[#1f1f1f] to-black p-6">
@@ -209,9 +218,22 @@ export default function Home() {
                   </motion.div>
                 ))}
               </AnimatePresence>
+
+
+              
             </div>
+
+            
           )}
         </section>
+
+        <div style={{ background: 'black', padding: '20px' }}>
+      <WaveformPlayer 
+        audioUrl="/song.wav"
+        containerWidth="800px" // Fixed width container
+        pixelsPerSecond={50}   // Adjust detail level
+      />
+    </div>
 
         {/* Total Songs Section */}
         <section className="mb-10">
@@ -272,6 +294,8 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        
       </div>
     </div>
   );
