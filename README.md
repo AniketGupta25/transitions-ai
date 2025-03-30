@@ -2,6 +2,16 @@
 
 Transitions AI is a Python project that automatically generates high-quality DJ mashups from multiple input songs by analyzing and intelligently combining musical phrases.
 
+
+### IMMEDIATE RUN INSTRUCTIONS
+
+```cd frontend
+npm install
+npm rn dev```
+
+Backend lib is /transitions-ai. Frontend code held in /frontend.
+The main.py is entrypoint for the backend. Currently run locally.
+
 ## Features
 
 - **Audio Analysis**: Extract key information from tracks (BPM, key, energy levels, etc.)
